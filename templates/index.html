@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta charset="utf-8">
+    <title>Spakers in Text</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='css/index.css') }}">
+</head>
+
+<body>
+    <div class="background">
+        <div class="header">
+            <a href="/">
+                <span class="title">Nouvel : Novel for you</span>
+            </a>
+        </div>
+        <div class="empty"></div>
+        <div class="box">
+            <p class="subtitle">서비스 소개</p>
+            <div class="explain-box">
+                <span class="explain">BERT 모델을 활용하여 텍스트 파일 내에서 발화자를 인식할 수 있는 모델입니다. 아래의 시작하기 버튼을 눌러 텍스트 파일을 업로드하고 모델을
+                    이용한 발화자 인식 결과를 확인할 수 있습니다.</span>
+            </div>
+            <div class="buttonbox">
+                <button onClick="location.href='put.html'" class="start-button">
+                    <span>시작하기</span>
+                </button>
+            </div>
+        </div>
+        <div class="foot">
+            <div class="footer-text">
+                <span>고려대학교 지능정보 SW 아카데미 5조</span>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
