@@ -226,7 +226,7 @@ def combine_similar_names(names_dict):
     names = names_dict.keys()
     similar_groups = [[name] for name in names if len(name) == 2]
     idx = 0
-    print(similar_groups, '\n',idx)
+    # print(similar_groups, '\n',idx)
 
     for name in names:
         found = False
@@ -244,10 +244,10 @@ def combine_similar_names(names_dict):
                                 same_part += name[i]
                         if same_part not in group and cleaned_text not in group:
                             group.append(cleaned_text)
-                            print(similar_groups, '\n',idx, '문자열의 길이가 같을 때')
+                            # print(similar_groups, '\n',idx, '문자열의 길이가 같을 때')
                     else:    
                         group.append(name)
-                        print(similar_groups, '\n',idx, '문자열의 길이가 다를 때')
+                        # print(similar_groups, '\n',idx, '문자열의 길이가 다를 때')
                         break
             if found:
                 break

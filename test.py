@@ -14,18 +14,30 @@ with open('test/test.txt', "r", encoding="utf-8") as f:
 
 
 #%%
+from module.load_model import load_ner
+from module.input_process import make_ner_input
+from module.ner_utils import make_name_list, show_name_list, combine_similar_names
+
+ner_model, checkpoint = load_ner('model/NER.pth')
+
+with open('test/test.txt', "r", encoding="utf-8") as f:
+    file_content = f.read()
 
 content = make_ner_input(file_content)
-name_list = make_name_list(content, checkpoint)
+name_list, time, place = make_name_list(content, checkpoint)
+name_dic = show_name_list(name_list)
+similar_name = combine_similar_names(name_dic)
 
-# %%
-name_list = ['승호','승호','승호','하원','하원', '정원']
-name = Counter(name_list)
-# counter = Counter
 
-# nn = dict(counter(name_list))
 
-# cc = combine_similar_names(dict(nn))
+for i in similar_name:
+    print(i)
+
+
+
+
+
+
 
 
 

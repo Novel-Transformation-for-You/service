@@ -3,7 +3,7 @@ This is main.py
 """
 from fastapi import FastAPI, File, UploadFile, Form, Request
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 
 # from module.load_model import load_fs, load_ner
@@ -16,6 +16,8 @@ class AppData:
     def __init__(self):
         self.file_content = ""
         self.name_list = []
+        self.place = []
+        self.times = []
 
 
 app_data = AppData()
@@ -41,7 +43,7 @@ async def page_put(request: Request):
 @app.get("/confirm.html", response_class=HTMLResponse)
 async def page_confirm(request: Request):
     """confirm.HTML 화면"""
-    return templates.TemplateResponse("confirm.html", {"request": request})
+    return templates.TemplateResponse("confirm.html", {"request": request, "file_content": app_data.file_content})
 
 
 @app.post("/upload", response_class=HTMLResponse)
@@ -49,26 +51,39 @@ async def upload_file(file: UploadFile = File(...)):
     """파일 업로드 및 저장"""
     with open("uploads/" + file.filename, "wb") as f:
         f.write(file.file.read())
-    app_data.file_content = f
+
+    with open("uploads/" + file.filename, "r", encoding="utf-8") as f:
+        app_data.file_content = f.read()
+
     return RedirectResponse(url="/put.html")
 
 
-@app.post("/ners", response_class=HTMLResponse)
-async def ner_file(file: UploadFile = File(...)):
-    """저장된 파일에 NER 작업"""
+@app.post("/ners", response_class=JSONResponse)
+async def ner_file():
+    """저장된 파일에 NER 작업을 해서 화자랑 장소를 구분"""
     from module.load_model import load_ner
     from module.input_process import make_ner_input
-    from module.ner_utils import make_name_list, show_name_list
+    from module.ner_utils import make_name_list, show_name_list, combine_similar_names
 
-    cintent = app_data.file_content
-    ner_model, ner_checkpoint = load_ner()
+    content = app_data.file_content
+    _, ner_checkpoint = load_ner()
 
-    contents = make_ner_input(cintent)
-    name_list = make_name_list(contents, ner_checkpoint)
-    show = show_name_list(name_list)
+    contents = make_ner_input(content)
+    name_list, place, times = make_name_list(contents, ner_checkpoint)
+    name_dic = show_name_list(name_list)
+    similar_name = combine_similar_names(name_dic)
+    result_list = [', '.join(names) for names, _ in similar_name.items()]
+
+    # JSONResponse로 응답
+    return JSONResponse(content={"itemList": result_list})
 
 
-# app_data = AppData()
+@app.get("/find-speaker", response_class=HTMLResponse)
+async def page_put(request: Request):
+    """"""
+
+
+
 
 # # 사용되는 값들 미리 불러오기
 # name_list = []
@@ -78,18 +93,7 @@ async def ner_file(file: UploadFile = File(...)):
 
 # # 모델 불러오기
 # # fs_model, fs_checkpoint = load_fs()
-# 
-
-# # 현재 날짜와 시간을 이용하여 새로운 파일 이름 생성
-# current_datetime = datetime.now().strftime("%Y%m%d%H%M%S")
-# new_filename = f"{current_datetime}.txt"
-# text_file_path = os.path.join(UPLOAD_FOLDER, new_filename)
-
-
-
-
-
-
+#
 
 
 # @app.post("/upload-and-redirect", response_class=HTMLResponse)
@@ -109,15 +113,6 @@ async def ner_file(file: UploadFile = File(...)):
 
 #     return templates.TemplateResponse("./confirm.html", {
 #         "request": request, "name_list": show, "file_content": app_data.file_content})
-
-
-
-
-# @app.post("/find-speaker")
-# async def find_speaker(request: Request):
-#     """발화자를 찾고 싶다."""
-#     return templates.TemplateResponse("show.html", {
-#         "request": request, "name_list": app_data.name_list})
 
 
 # @app.get("/find-speaker", response_class=HTMLResponse)
