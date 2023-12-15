@@ -33,7 +33,7 @@ name_list = []
 file_content =''
 
 # 모델 불러오기
-fs_model = load_fs()
+# fs_model = load_fs()
 ner_model, checkpoint = load_ner()
 
 # 파일을 저장할 폴더 경로
@@ -87,6 +87,15 @@ async def read_confirm(request: Request):
     })
 
 
+@app.get("./user.html", response_class=HTMLResponse)
+async def read_confirm(request: Request):
+    """confirm.HTML 화면"""
+    return templates.TemplateResponse("user.html", {
+        "request": request, "file_content": app_data.file_content
+    })
+
+
+
 @app.post("/find-speaker")
 async def find_speaker(request: Request):
     """발화자를 찾고 싶다."""
@@ -100,3 +109,9 @@ async def success_page(request: Request):
     사용자 = make_instance_list(app_data.file_content)
     
     return templates.TemplateResponse("success.html", {"request": request})
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run(app, host="127.0.0.1", port=8000)
