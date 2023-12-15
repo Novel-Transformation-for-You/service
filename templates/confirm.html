@@ -57,6 +57,10 @@
                     클릭해주세요.</span>
             </div>
 
+            {% for line in name_list %}
+            {{ line }}
+            {% endfor %}
+
             <div class="container mt-4">
                 <ol id="itemList" class="list-group">
                     <!-- 목록이 여기에 동적으로 추가됩니다. -->

@@ -111,17 +111,19 @@ def get_ner_predictions(text, checkpoint):
     return tokenized_sent, pred_tags
 
 
-def ner_inference_name(tokenized_sent, pred_tags, checkpoint, name_len=5) -> list:
+def ner_inference(tokenized_sent, pred_tags, checkpoint, name_len=5) -> list:
     """
     Name에 한해서 inference
     """
     name_list = []
     speaker = ''
     tokenizer = checkpoint['tokenizer']
+    scene = {'장소': [], '시간': []}
+    target = ''
+    c_tag = None
 
     for i, tag in enumerate(pred_tags):
-        token = tokenizer.convert_ids_to_tokens(
-            tokenized_sent['input_ids'][i]).replace('#', '')
+        token = tokenizer.convert_ids_to_tokens(tokenized_sent['input_ids'][i]).replace('#', '')
         if 'PER' in tag:
             if 'B' in tag and speaker != '':
                 name_list.append(speaker)
@@ -134,25 +136,36 @@ def ner_inference_name(tokenized_sent, pred_tags, checkpoint, name_len=5) -> lis
             else:
                 tmp = speaker
                 found_name = False
-                print(f'{speaker}에 의문이 생겨 확인해봅니다.')
+                # print(f'{speaker}에 의문이 생겨 확인해봅니다.')
                 for j in range(name_len):
                     if i + j < len(tokenized_sent['input_ids']):
                         token = tokenizer.convert_ids_to_tokens(
                             tokenized_sent['input_ids'][i+j]).replace('#', '')
                         tmp += token
-                        print(f'{speaker} 뒤로 나온 {j} 번째 까지 확인한결과, {tmp} 입니다')
+                        # print(f'{speaker} 뒤로 나온 {j} 번째 까지 확인한결과, {tmp} 입니다')
                         if tmp in name_list:
                             name_list.append(tmp)
                             found_name = True
-                            print(f'명단에 {tmp} 가 존재하여, {speaker} 대신 추가하였습니다.')
+                            # print(f'명단에 {tmp} 가 존재하여, {speaker} 대신 추가하였습니다.')
                             break
 
                 if not found_name:
                     name_list.append(speaker)
-                    print(f'찾지 못하여 {speaker} 를 추가하였습니다.')
+                    # print(f'찾지 못하여 {speaker} 를 추가하였습니다.')
                 speaker = ''
 
-    return name_list
+        elif tag != 'O':
+            if tag.startswith('B'):
+                if c_tag in ['TIM', 'DAT']:
+                    scene['시간'].append(target)
+                elif c_tag =='LOC':
+                    scene['장소'].append(target)
+                c_tag = tag[2:]
+                target = token
+            else:
+                target += token.replace('_', ' ')
+
+    return name_list, scene
 
 
 def make_name_list(ner_inputs, checkpoint):
@@ -160,19 +173,24 @@ def make_name_list(ner_inputs, checkpoint):
     문장들을 NER 돌려서 Name List 만들기.
     """
     name_list = []
+    times = []
+    places = []
+
     for ner_input in ner_inputs:
         tokenized_sent, pred_tags = get_ner_predictions(ner_input, checkpoint)
-        names = ner_inference_name(tokenized_sent, pred_tags, checkpoint)
+        names, scene = ner_inference(tokenized_sent, pred_tags, checkpoint)
         name_list.extend(names)
+        times.append(scene['시간'])
+        places.append(scene['장소'])
 
-    return name_list
+    return name_list, times, places
 
 
 def show_name_list(name_list):
     """
     사용자 친화적으로 보여주기용
     """
-    name = Counter(name_list)
+    name = dict(Counter(name_list))
 
     return name
 

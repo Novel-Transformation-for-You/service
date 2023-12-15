@@ -32,19 +32,17 @@
             <label class="btn btn-secondary" for="option2">독자(이용자)</label>
             </div>
             <div class="body">
-                <form id="uploadForm" action="/upload-and-redirect" method="post" enctype="multipart/form-data">
-                    <div class="formbox">
-                        <div class="mb-3">
-                            <label for="formFileSm" class="form-label"><b>첨부파일 업로드</b></label>
-                            <div class="filebox">
-                                <input class="form-control form-control-sm" id="formFileSm" name="file" type="file">
-                            </div>
-                        </div>
+                <div class="formbox">
+                    <div class="mb-3">
+                        <label for="formFileSm" class="form-label"><b>첨부파일 업로드</b></label>
+                        <input class="form-control form-control-sm" id="formFileSm" type="file">
                     </div>
-                    <div class="transformbox">
-                        <button class="transformButton" type="submit"><span>변환하기</span></button>
-                    </div>
-                </form>
+                </div>
+                <div class="transformbox">
+                    <button onclick="handleButtonClick()" class="transformButton" type="button">
+                        <span>변환하기</span>
+                    </button>
+                </div>
             </div>
         </div>
         <div class="foot">
@@ -53,6 +51,7 @@
             </div>
         </div>
     </div>
+    <script src="../static/js/put.js"></script>
 </body>
 
 </html>
