@@ -172,40 +172,44 @@ def show_name_list(name_list):
     """
     사용자 친화적으로 보여주기용
     """
-    name = Counter(name_list).most_common()
+    name = Counter(name_list)
 
     return name
 
 
 def compare_strings(str1, str2):
     """
-    한국 배경일 경우
+    한국 배경일 경우 길이가 다른 경우와 같은 경우를 비교하여 데이터를 처리
     """
-    # 길이가 다른 경우
     if len(str1) != len(str2):
         # 더 짧은 문자열이 더 긴 문자열에 포함되는지 확인
         shorter, longer = (str1, str2) if len(str1) < len(str2) else (str2, str1)
         if shorter in longer:
             return True
-    # 길이가 같은 경우
     else:
         same_part = []
-        # 완전히 일치하는 부분이 있는지 확인
         for i in range(len(str1)):
             if str1[i] in str2:
                 same_part += str1[i]
                 continue
-            else: 
+            else:
                 break
         if len(same_part) >= 2:
             return True
-        
+
     return False
 
-def combine_similar_names(names):
-    similar_groups = [[name] for name in names if len(name) == 2] #2글자는 이름일 확률이 높으니 일단 넣고 시작
+def combine_similar_names(names_dict):
+    """
+    compare_strings 을 바탕으로 Name List 관련 데이터를 처리
+
+    2글자는 이름일 확률이 높으니 일단 넣고 시작
+    """
+    names = names_dict.keys()
+    similar_groups = [[name] for name in names if len(name) == 2]
     idx = 0
     print(similar_groups, '\n',idx)
+
     for name in names:
         found = False
         for group in similar_groups:
@@ -232,12 +236,8 @@ def combine_similar_names(names):
         if not found:
             similar_groups.append([name])
 
-    combined_names = {tuple(group): sum(ex[name] for name in group if name != '') for group in similar_groups if name != ''}
-    return combined_names
+    updated_names = {tuple(name for name in group if len(name) > 1): counts for group, counts in (
+        (group, sum(names_dict[name] for name in group if name != '')) for group in similar_groups)
+        if len([name for name in group if len(name) > 1]) > 0}
 
-consolidated_names = combine_similar_names(ex.keys())
-print(consolidated_names)
-
-
-#이름에서 마지막의 아/이 있으면 제외하기 (진행중)
-new_names = [re.sub(r'(아|이)$', '', name) for names in consolidated_names for name in names if len(re.sub(r'(아|이)$', '', name)) > 1 and len(name) >=2]
+    return updated_names

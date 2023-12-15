@@ -10,7 +10,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
 from module.load_model import load_fs, load_ner
-from module.input_process import make_ner_input
+from module.input_process import make_ner_input, make_instance_list
 from module.ner_utils import make_name_list, show_name_list
 
 
@@ -21,7 +21,6 @@ class AppData:
     def __init__(self):
         self.file_content = ""
         self.name_list = []
-
 
 # 설정
 app = FastAPI()
@@ -83,8 +82,6 @@ async def upload_and_show(request: Request, file: UploadFile = File(...)):
 @app.get("./confirm.html", response_class=HTMLResponse)
 async def read_confirm(request: Request):
     """confirm.HTML 화면"""
-    # with open(text_file_path, "r", encoding="utf-8") as f:
-    #     file_content = f.read()
     return templates.TemplateResponse("confirm.html", {
         "request": request, "file_content": app_data.file_content
     })
@@ -97,6 +94,9 @@ async def find_speaker(request: Request):
         "request": request, "name_list": app_data.name_list})
 
 
-# @app.get("/success", response_class=HTMLResponse)
-# async def success_page(request: Request):
-#     return templates.TemplateResponse("success.html", {"request": request})
+@app.get("/success", response_class=HTMLResponse)
+async def success_page(request: Request):
+    """스크립트를 보여주고 싶다."""
+    사용자 = make_instance_list(app_data.file_content)
+    
+    return templates.TemplateResponse("success.html", {"request": request})
