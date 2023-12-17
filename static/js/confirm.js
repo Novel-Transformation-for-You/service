@@ -3,9 +3,6 @@
 // 샘플 데이터
 let itemList = [];
 
-// 목록 업데이트 함수
-
-
 // 수정 모달 열기 함수
 function editItem(index) {
     const item = itemList[index];
@@ -80,6 +77,7 @@ function addItem() {
     itemList.push(newItem);
     updateItemList();
     $('#addItemModal').modal('hide');
+    event.preventDefault();
 }
 
 // 
@@ -145,3 +143,38 @@ function updateItemList(event) {
     const explainText = document.querySelector('.explain');
     explainText.textContent = '아래 내용은 ai가 감지한 txt파일 속 등장인물들의 목록입니다. 목록을 확인하고 등장인물의 이름을 수정한 다음 확인 버튼을 클릭해주세요.';
 }
+
+function handleButtonClick() {
+    let itemList = document.getElementById('itemList');
+    let items = itemList.getElementsByTagName('li');
+
+    let nameList = [];
+
+    for (var i = 0; i < items.length; i++) {
+        // 각 li 요소의 자식 요소 중에서 버튼을 제외한 텍스트만 추출
+        var text = Array.from(items[i].childNodes)
+            .filter(node => node.nodeType === Node.TEXT_NODE)
+            .map(node => node.textContent.trim())
+            .join('');
+        nameList.push(text);
+        console.log("Text from item " + i + ": " + text);
+    }
+
+    // Fetch API를 사용하여 FastAPI 서버로 데이터 전송
+    fetch('/kcsn', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ nameList: nameList }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('Success:', data);
+
+        // fetch 작업이 완료되면 이동
+        location.href = '/final.html';
+    })
+    .catch(error => console.error('Error:', error));
+}
+

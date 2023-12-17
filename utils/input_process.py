@@ -52,7 +52,7 @@ def make_instance_list(text: str, ws=10) -> list:
         else:
             instance[i] += (lines[num-ws:num + ws + 1])
 
-    return instance
+    return instance, instance_num
 
 
 def NML(seg_sents, mention_positions, ws):

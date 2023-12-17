@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="utf-8">
+  <title>Spakers in Text</title>
+  <link rel="stylesheet" href="{{ url_for('static', path='css/index.css') }}">
+</head>
+
+<body>
+  <div class="background">
+    <div class="header"><a href="/"><span class="title">Nouvel : Novel for you</span></a></div>
+    <div class="empty"></div>
+    <div class="box">
+      <div class="subtitle">ㅎㅇ 이용자페이지임</div>
+      <div class="body">
+        대본으로 만들고 싶은 txt 파일을 업로드해주세요.
+        여기에 호준이형이 ner로 작업한거 띄워주는거 기워넣으면 될 듯
+      </div>
+      <div class="transformbox">
+        <button onclick="handleButtonClick()" class="transformButton"><span>장면으로 변환하기</span></button>
+      </div>
+    </div>
+    <div class="foot">
+      <div class="footer-text">
+        <span>고려대학교 지능정보 SW 아카데미 5조</span>
+      </div>
+    </div>
+    <script src="../static/js/user.js"></script>
+</body>
+
+</html>

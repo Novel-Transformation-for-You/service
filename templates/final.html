@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="utf-8">
+  <title>Spakers in Text</title>
+  <link rel="stylesheet" href="{{ url_for('static', path='css/finishs.css') }}">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" crossorigin="anonymous">
+</head>
+
+<body>
+  <!-- jQuery 및 Bootstrap JavaScript 로드 -->
+  <script src="https://code.jquery.com/jquery-3.6.4.min.js"
+    integrity="sha256-oP6HI/tZ1aS9sz3Jr4+6zqbc9BE/l6fLx+Vz2I+H/GL4ZiI/Z5L3hMv8w3yXdBi" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-3ziFjNlAXja/Yb0M7y2BmFvR3s09gRPbrCm0lF+SvL4uIboD5lv3U3BdD7dW7Y3" crossorigin="anonymous"></script>
+
+  <div class="background">
+    <div class="header"><a href="/"><span class="title">Nouvel : Novel for you</span></a></div>
+    <div class="empty"></div>
+    <div class="box">
+      <div class="subtitle">txt파일 발화자 추출 결과</div>
+      <div class="explain_box">
+        <span class="explain">아래 내용은 ai가 감지한 txt파일 속 등장인물들의 목록입니다.</br>목록을 확인하고 등장인물의 이름을 수정한 다음 확인 버튼을 클릭해주세요.</span>
+      </div>
+      <div class = "TLContainer">
+        <div class = "timeContainer">
+          <span class = "timelocation">{{ time }}</span>
+        </div>
+        <div class = "locationContainer">
+          <span class = "timelocation">{{ place }}</span>
+        </div>
+      </div>
+      <div class="itemContainer" id="resultContainer">
+        {% for out in output %}
+        <p>{{ out }}</p>
+        {% endfor %}
+      </div>
+      <div class="buttonContainer">
+        <div class="downloadButtonContainer">
+          <button id="downloadButton">Download Text File</button>
+        </div>
+        <div class="homeButtonContainer">
+          <button id="homeButton" onClick="location.href='/'">홈으로 돌아가기</button>
+        </div>
+      </div>
+    </div>
+    <div class="foot">
+      <div class="footer-text">
+        <span>고려대학교 지능정보 SW 아카데미 5조</span>
+      </div>
+    </div>
+  </div>
+  <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+  <script type="text/javascript" src="../js/finish.js"></script>
+</body>
+
+</html>
