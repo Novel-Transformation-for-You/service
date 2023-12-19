@@ -3,7 +3,7 @@
 """
 class InputFeatures:
     """
-    Represents the inputs of the BERT model.
+    BERT 모델의 입력들
     """
     def __init__(self, tokens, input_ids, input_mask, input_type_ids):
         self.tokens = tokens
@@ -14,7 +14,7 @@ class InputFeatures:
 
 def convert_examples_to_features(examples, tokenizer):
     """
-    Convert textual segments into word IDs.
+    텍스트 segment를 단어 ID로 변환합니다.
     """
     features = []
     tokens_list = []
@@ -48,7 +48,7 @@ def convert_examples_to_features(examples, tokenizer):
 
 def get_alias2id(name_list_path) -> dict:
     """
-    name list 만들기
+    주어진 이름 목록 파일에서 별칭(alias)을 ID로 매핑하는 사전을 생성.
     """
     with open(name_list_path, 'r', encoding='utf-8') as fin:
         name_lines = fin.readlines()
@@ -63,7 +63,7 @@ def get_alias2id(name_list_path) -> dict:
 
 def find_speak(fs_model, input_data, tokenizer, alias2id):
     """
-    화자 찾는거
+    주어진 모델과 입력 데이터를 사용하여 각 입력에 대한 화자를 찾는 함수
     """
     model = fs_model
     check_data_iter = iter(input_data)
@@ -102,7 +102,7 @@ def find_speak(fs_model, input_data, tokenizer, alias2id):
 
 def making_script(text, speaker:list, instance_num:list) -> str:
     """
-    스크립트를 만드는 함수
+    주어진 텍스트와 화자 목록, 해당하는 줄 번호를 사용하여 대화 스크립트를 생성하는 함수
     """
     lines = text.splitlines()
     for num, people in zip(instance_num, speaker):
