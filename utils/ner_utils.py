@@ -204,7 +204,13 @@ def show_name_list(name_list):
 
 def compare_strings(str1, str2):
     """
-    한국 배경일 경우 길이가 다른 경우와 같은 경우를 비교하여 데이터를 처리
+    ner로 추출한 인명을 후처리하는 코드입니다.
+    비교할 두 문자열의 길이가 다를 경우, 더 짧은 문자열이 더 긴 문자열에 포함되는지 확인합니다.
+    비교할 두 문자열의 길이가 같을 경우, 겹치는 부분이 2글자 이상일 경우 같은 이름으로 지정합니다. 
+    이 함수와 아래의 combine_similar_names를 함께 실행하면, '한다정'과 '다정이', '다정이가' 등은 모두 하나의 인물로 묶을 수 있습니다.
+
+    Args: 비교하려는 두 문자열
+    Return: 두 문자열이 같은 이름으로 판단될 경우 True, 아닐 경우 False
     """
     if len(str1) != len(str2):
         # 더 짧은 문자열이 더 긴 문자열에 포함되는지 확인
@@ -226,9 +232,8 @@ def compare_strings(str1, str2):
 
 def combine_similar_names(names_dict):
     """
-    compare_strings 을 바탕으로 Name List 관련 데이터를 처리
-
-    2글자는 이름일 확률이 높으니 일단 넣고 시작
+    compare_strings 함수를 바탕으로 유사한 이름을 함께 묶습니다.
+    2글자는 이름일 확률이 높으니 기준점으로 지정합니다.
     """
     names = names_dict.keys()
     similar_groups = [[name] for name in names if len(name) == 2]
@@ -268,8 +273,7 @@ def combine_similar_names(names_dict):
     return updated_names
 
 def convert_name2codename(codename2name, text):
-    """RE를 이용하여 이름을 코드네임으로 변경합니다."""
-    # 우선 각 name을 길이 내림차순으로 정렬하고,
+    """RE를 이용하여 이름을 코드네임으로 변경합니다. 이때 각 코드네임의 번호는 빈도수 기준 내림차순한 결과입니다."""
     import re
     for n_list in codename2name.values():
         n_list.sort(key=lambda x:(len(x), x), reverse=True)
