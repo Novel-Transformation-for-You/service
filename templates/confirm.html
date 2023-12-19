@@ -51,12 +51,9 @@
             <div class="subtitle">
                 감지한 등장인물 명단
             </div>
-
             <div class="explain_box">
-                <span class="explain">아래 내용은 ai가 감지한 txt파일 속 등장인물들의 목록입니다. 목록을 확인하고 등장인물의 이름을 수정한 다음 확인 버튼을
-                    클릭해주세요.</span>
+                <span class="explain">작업이 진행 중 입니다. 잠시만 기다려 주세요.</span>
             </div>
-
             <div class="container mt-4">
                 <ol id="itemList" class="list-group">
                     <!-- 목록이 여기에 동적으로 추가됩니다. -->
@@ -89,12 +86,11 @@
             -->
 
             <div class="buttonbox">
-                <form id="modelform" action="/find-speaker" method="post" enctype="multipart/form-data">
-                    <div class="transformbox">
-                        <button class="transformButton" type="submit"><span>시작하기</span></button>
-                    </div>
-                </form>
-
+                <div class="transformbox">
+                    <button onclick="handleButtonClick()" class="transformButton" type="submit">
+                        <span>시작하기</span>
+                    </button>
+                </div>
             </div>
             <div class="foot">
                 <div class="footer-text">
@@ -102,10 +98,14 @@
                 </div>
             </div>
         </div>
-        <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
-        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
-        <script type="text/javascript" src="../static/js/confirm.js"></script>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../static/js/confirm.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {handlePageLoad();});
+    </script>
 </body>
 
 </html>

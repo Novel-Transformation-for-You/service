@@ -6,9 +6,6 @@ import re
 
 from torch.utils.data import DataLoader, Dataset
 
-# from model.find_speaker.arguments import get_train_args
-# from model.ner.ner_utils import ner_inference_name, get_ner_predictions
-
 
 class ISDataset(Dataset):
     """
@@ -25,14 +22,14 @@ class ISDataset(Dataset):
         return self.data[idx]
 
 
-def make_instance_list(text: str, ws=10) -> dict:
+def make_instance_list(text: str, ws=10) -> list:
     """
     입력받은 문장을 기초적인 인스턴스 리스트로 만들어줍니다.
     """
     lines = text.splitlines()
     max_line = len(lines)
 
-    utterance = ['"', '“']
+    utterance = ['"', '“', '‘']
     instance_num = []
 
     for idx, line in enumerate(lines):
@@ -55,7 +52,7 @@ def make_instance_list(text: str, ws=10) -> dict:
         else:
             instance[i] += (lines[num-ws:num + ws + 1])
 
-    return instance
+    return instance, instance_num
 
 
 def NML(seg_sents, mention_positions, ws):
@@ -134,7 +131,7 @@ def seg_and_mention_location(raw_sents_in_list, alias2id):
     return seg_sents, character_mention_poses, name_list_index
 
 
-def create_CSS(seg_sents, candidate_mention_poses, ws=10):
+def create_css(seg_sents, candidate_mention_poses, ws=10):
     """
     Create candidate-specific segments for each candidate in an instance.
     """
@@ -185,7 +182,7 @@ def input_data_loader(instances: list, alias2id) -> DataLoader:
     for instance in instances:
         seg_sents, candidate_mention_poses, name_list_index = seg_and_mention_location(
             instance, alias2id)
-        css, sent_char_lens, mention_poses, quote_idxes, cut_css = create_CSS(
+        css, sent_char_lens, mention_poses, quote_idxes, cut_css = create_css(
             seg_sents, candidate_mention_poses)
 
         data_list.append((seg_sents, css, sent_char_lens, mention_poses, quote_idxes,
