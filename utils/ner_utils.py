@@ -1,5 +1,5 @@
 """
-NER 모델을 이용하여 작업
+NER 모델을 이용하여 작업하는 코드입니다.
 """
 import re
 import torch
@@ -13,15 +13,23 @@ def make_ner_input(text, chunk_size=500) -> list:
     """
     문장을 New Lines 기준으로 나누어 줍니다.
     chunk size보다 문장이 길 경우, 마지막 문장은 뒤에서 chunk size 만큼 추가합니다.
+    
+    Args:
+        text: 개체명 인식을 하고자 하는 텍스트(문자열)를 입력합니다. 
+        chunk_size: BERT의 config에서 지정된 최대 문자열 길이가 512이므로, 512 이하의 길이로 문자열을 쪼개 처리합니다.
+                    문맥을 고려하기 때문에 길이가 길수록 정확도가 증가합니다.
+    Return:
+        split_sentences: chunk_size 기준으로 새롭게 나눈 text의 리스트를 반환합니다.
     """
     count_text = chunk_size
     max_text = len(text)
     newline_position = []
 
+    # 텍스트의 길이가 chunk 최대 크기보다 클 경우, chunk 최대 크기를 기준으로 텍스트를 자르고 그 인덱스를 저장합니다.
     while count_text < max_text:
         sentence = text[:count_text]
-        last_newline_position = sentence.rfind('\n')
-        newline_position.append(last_newline_position)
+        last_newline_position = sentence.rfind('\n') # 자른 텍스트마다 마지막 줄바꿈 인덱스를 newline_position에 저장합니다.
+        newline_position.append(last_newline_position) 
         count_text = last_newline_position + chunk_size
 
     split_sentences = []
