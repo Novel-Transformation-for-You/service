@@ -8,92 +8,88 @@ from collections import Counter
 
 device = "cuda:0" if torch.cuda.is_available() else "cpu"
 
-
-def make_ner_input(text, chunk_size=500) -> list:
+def ner_tokenizer(text, max_seq_length, checkpoint):
     """
-    문장을 New Lines 기준으로 나누어 줍니다.
-    chunk size보다 문장이 길 경우, 마지막 문장은 뒤에서 chunk size 만큼 추가합니다.
-    
+    NER을 위해 텍스트를 토큰화합니다. 
     Args:
-        text: 개체명 인식을 하고자 하는 텍스트(문자열)를 입력합니다. 
-        chunk_size: BERT의 config에서 지정된 최대 문자열 길이가 512이므로, 512 이하의 길이로 문자열을 쪼개 처리합니다.
-                    문맥을 고려하기 때문에 길이가 길수록 정확도가 증가합니다.
+        sent: 처리하고자 하는 텍스트를 입력받습니다.
+        max_seq_length: BERT의 config에서 처리 가능한 최대 문자열 길이는 512입니다. 최대 길이를 넘어서지 않도록, 텍스트 길이가 512를 넘어갈 경우 여러 개의 문자열로 분리합니다. 
+                        문맥 정보를 고려하므로 가능한 긴 길이로 chunking하는 것이 좋은 성능을 보장할 수 있습니다.
+        checkpoint: NER 모델에 대한 정보를 불러들입니다.
     Return:
-        split_sentences: chunk_size 기준으로 새롭게 나눈 text의 리스트를 반환합니다.
+        ner_tokenizer_dict: 아래 세 요소를 포함한 딕셔너리입니다.
+            input_ids: 각 토큰의 모델 딕셔너리에서의 아이디값입니다.
+            attention_mask: 각 토큰의 어탠션 마스크 활성화 여부입니다.
+            token_type_ids: 개체명 인식 된 토큰의 경우 그 타입의 아이디(숫자 조합)를 반환합니다.
     """
-    count_text = chunk_size
-    max_text = len(text)
-    newline_position = []
-
-    # 텍스트의 길이가 chunk 최대 크기보다 클 경우, chunk 최대 크기를 기준으로 텍스트를 자르고 그 인덱스를 저장합니다.
-    while count_text < max_text:
-        sentence = text[:count_text]
-        last_newline_position = sentence.rfind('\n') # 자른 텍스트마다 마지막 줄바꿈 인덱스를 newline_position에 저장합니다.
-        newline_position.append(last_newline_position) 
-        count_text = last_newline_position + chunk_size
-
-    split_sentences = []
-    start_num = 0
-
-    for _, num in enumerate(newline_position):
-        split_sentences.append(text[start_num:num])
-        start_num = num
-
-    if max_text % chunk_size != 0:
-        f_sentence = text[max_text-500:]
-        first_newline_position = max_text-500 + f_sentence.find('\n')
-        split_sentences.append(text[first_newline_position:])
-
-    return split_sentences
-
-
-def ner_tokenizer(sent, max_seq_length, checkpoint):
-    """
-    NER 토크나이저
-    """
+    #저장된 모델의 토크나이저를 불러옵니다.
     tokenizer = checkpoint['tokenizer']
 
+    #각각 패딩, 문장 시작, 문장 끝을 나타내는 특별한 토큰들의 ID 값들을 가져옵니다.
     pad_token_id = tokenizer.pad_token_id
     cls_token_id = tokenizer.cls_token_id
     sep_token_id = tokenizer.sep_token_id
 
-    pre_syllable = "_"
+    #이전 음절을 저장하는 변수를 초기화합니다.
+    pre_syllable = "_" 
+
+    #토크나이징된 결과를 저장할 리스트들을 초기화합니다.
     input_ids = [pad_token_id] * (max_seq_length - 1)
     attention_mask = [0] * (max_seq_length - 1)
     token_type_ids = [0] * max_seq_length
-    sent = sent[:max_seq_length-2]
 
-    for i, syllable in enumerate(sent):
+    #입력된 텍스트를 최대 시퀀스 길이에 맞게 잘라냅니다.
+    text = text[:max_seq_length-2]
+
+    #텍스트의 각 음절에 대해 반복문을 실행합니다.
+    for i, syllable in enumerate(text):
         if syllable == '_':
             pre_syllable = syllable
         if pre_syllable != "_":
             syllable = '##' + syllable
         pre_syllable = syllable
 
+        #토큰을 모델의 단어 사전에 있는 ID 값으로 변환하여 input_ids 리스트에 저장합니다.
         input_ids[i] = tokenizer.convert_tokens_to_ids(syllable)
+        #해당 위치의 토큰에 대한 어텐션 마스크를 활성화합니다.
         attention_mask[i] = 1
 
+    #입력 시퀀스의 시작에는 cls_token_id를, 끝에는 sep_token_id를 추가합니다.
     input_ids = [cls_token_id] + input_ids[:-1] + [sep_token_id]
+    #어텐션 마스크도 시작과 끝 토큰을 고려하여 수정합니다.
     attention_mask = [1] + attention_mask[:-1] + [1]
 
-    return {"input_ids": input_ids,
-            "attention_mask": attention_mask,
-            "token_type_ids": token_type_ids}
-
+    ner_tokenizer_dict = {"input_ids": input_ids,
+                          "attention_mask": attention_mask,
+                          "token_type_ids": token_type_ids}
+    
+    return ner_tokenizer_dict
 
 def get_ner_predictions(text, checkpoint):
     """
-    tokenized_sent, pred_tags 만들기
+    토큰화한 문장(tokenized_sent)과 예측한 태그(pred_tags) 값을 만드는 함수입니다.
+    Args:
+        text: NER 예측을 필요로 하는 텍스트를 입력합니다. 
+        checkpoint: 저장한 모델을 불러들입니다.
+    Returns:
+        tokenized_sent: 모델 입력을 위한 토큰화된 문장 정보입니다.
+        pred_tags: 각 토큰에 대한 예측된 태그들을 포함합니다.
     """
-
+    #저장한 모델을 불러들입니다.
     model = checkpoint['model']
+    #태그와 해당 태그의 ID 매핑 정보를 가져옵니다.
     tag2id = checkpoint['tag2id']
     model.to(device)
+    #입력된 텍스트에서 공백을 언더스코어(_)로 대체합니다.
     text = text.replace(' ', '_')
 
+    #예측값과 실제 라벨을 저장할 빈 리스트를 생성합니다.
     predictions, true_labels = [], []
 
+    #ner_tokenizer 함수를 사용하여 텍스트를 토큰화합니다.
     tokenized_sent = ner_tokenizer(text, len(text) + 2, checkpoint)
+
+    #토큰화된 결과를 토대로 텐서로 변환하여 모델 입력 형식에 맞게 준비합니다.
     input_ids = torch.tensor(
         tokenized_sent['input_ids']).unsqueeze(0).to(device)
     attention_mask = torch.tensor(
@@ -101,19 +97,24 @@ def get_ner_predictions(text, checkpoint):
     token_type_ids = torch.tensor(
         tokenized_sent['token_type_ids']).unsqueeze(0).to(device)
 
+    #그래디언트 계산을 수행하지 않기 위해 torch.no_grad() 컨텍스트 내에서 다음을 실행합니다. (eval 영역이기 때문에 학습을 하지 않습니다)
     with torch.no_grad():
         outputs = model(
             input_ids=input_ids,
             attention_mask=attention_mask,
             token_type_ids=token_type_ids)
-
+        
+    #모델 출력에서 로짓 값을 가져와 Numpy값으로 변환하고, 라벨 ID들을 CPU 상의 NumPy 배열로 가져옵니다.
     logits = outputs['logits']
     logits = logits.detach().cpu().numpy()
     label_ids = token_type_ids.cpu().numpy()
 
+    #예측된 라벨 값을 가져와서 리스트에 추가합니다.
     predictions.extend([list(p) for p in np.argmax(logits, axis=2)])
+    #실제 라벨을 리스트에 추가합니다.
     true_labels.append(label_ids)
 
+    #예측된 라벨 ID를 실제 태그로 변환합니다.
     pred_tags = [list(tag2id.keys())[p_i] for p in predictions for p_i in p]
 
     return tokenized_sent, pred_tags
@@ -121,7 +122,13 @@ def get_ner_predictions(text, checkpoint):
 
 def ner_inference(tokenized_sent, pred_tags, checkpoint, name_len=5) -> list:
     """
-    Name에 한해서 inference
+    NER을 실행하고, 이름과 시간 및 공간 정보를 추출합니다.
+    Args:
+        tokenized_sent:
+        pred_tags:
+        checkpoint:
+        name_len:
+    Returns:
     """
     name_list = []
     speaker = ''
