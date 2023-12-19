@@ -23,11 +23,21 @@ def load_data(filename) -> Any:
 
 def NML(seg_sents, mention_positions, ws):
     """
-    Nearest Mention Location
+    Nearest Mention Location (특정 후보 발화자가 언급된 위치중, 인용문으로부터 가장 가까운 언급 위치를 찾는 함수)
+    
+    Parameters:
+        - seg_sents: 문장을 분할한 리스트
+        - mention_positions: 특정 후보 발화자가 언급된 위치를 모두 담은 리스트 [(sentence_index, word_index), ...]
+        - ws: 인용문 앞/뒤로 고려할 문장의 수
+
+    Returns:
+        - 가장 가까운 언급 위치의 (sentence_index, word_index)
     """
     def word_dist(pos):
         """
-        The word level distance between quote and the mention position
+        발화 후보자 이름이 언급된 위치와 인용문 사이의 거리를 단어 수준(word level)에서 반환합니다.
+
+        Parameters:
         """
         if pos[0] == ws:
             w_d = ws * 2
