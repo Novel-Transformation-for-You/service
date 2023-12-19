@@ -109,8 +109,18 @@ def max_len_cut(seg_sents, mention_pos, max_len):
 
 def seg_and_mention_location(raw_sents_in_list, alias2id):
     """
-    
+    주어진 문장을 분할하고 발화자 이름이 언급된 위치를 찾는 함수
+
+    Parameters:
+        - raw_sents_in_list: 분할할 원본 문장 리스트
+        - alias2id: 캐릭터 별 이름(및 별칭)과 ID를 매핑한 딕셔너리
+
+    Returns:
+        - seg_sents: 문장을 단어로 분할한 리스트
+        - character_mention_poses: 캐릭터별로, 이름이 언급된 위치를 모두 저장한 딕셔너리 {character1_id: [[sent_idx, word_idx], ...]}
+        - name_list_index: 언급된 캐릭터 이름 리스트
     """
+    
     character_mention_poses = {}
     seg_sents = []
     id_pattern = ['&C{:02d}&'.format(i) for i in range(51)]
@@ -121,6 +131,7 @@ def seg_and_mention_location(raw_sents_in_list, alias2id):
         for word_idx, word in enumerate(raw_sent_with_split):
             match =  re.search(r'&C\d{1,2}&', word)
 
+            # &C00& 형식으로 된 이름이 있을 경우, result 변수로 지정
             if match:
                 result = match.group(0)
 
@@ -138,22 +149,21 @@ def seg_and_mention_location(raw_sents_in_list, alias2id):
 
 def create_CSS(seg_sents, candidate_mention_poses, args):
     """
-    Create candidate-specific segments for each candidate in an instance.
+    각 인스턴스 내 각 발화자 후보(candidate)에 대하여 candidate-specific segments(CSS)를 만듭니다. 
 
-    params:
-        seg_sents: 2ws + 1 segmented sentences in a list.
-        candidate_mention_poses: a dict which contains the position of candiate mentions,
-        with format {character index: [[sentence index, word index in sentence] of mention 1,...]...}.
-        ws: single-sided context window size.
-        max_len: maximum length limit.
+    parameters:
+        seg_sents: 2ws + 1 개의 문장(각 문장은 분할됨)들을 담은 리스트
+        candidate_mention_poses: 발화자별로 이름이 언급된 위치를 담고 있는 딕셔너리이며, 형태는 다음과 같음.
+            {character index: [[sentence index, word index in sentence] of mention 1,...]...}.
+        args : 실행 인수를 담은 객체
 
     return:
         Returned contents are in lists, in which each element corresponds to a candidate.
         The order of candidate is consistent with that in list(candidate_mention_poses.keys()).
-        many_CSS: candidate-specific segments.
-        many_sent_char_len: segmentation information of candidate-specific segments.
+        many_CSS: 각 발화자 후보에 대한 candidate-specific segments(CSS).
+        many_sent_char_len: 각 CSS의 문자 길이 정보
             [[character-level length of sentence 1,...] of the CSS of candidate 1,...].
-        many_mention_pos: the position of the nearest mention in CSS. 
+        many_mention_pos: CSS 내에서, 인용문과 가장 가까운 이름이 언급된 위치
             [(sentence-level index of nearest mention in CSS, 
              character-level index of the leftmost character of nearest mention in CSS, 
              character-level index of the rightmost character + 1) of candidate 1,...].
@@ -209,7 +219,7 @@ def create_CSS(seg_sents, candidate_mention_poses, args):
 
 class ISDataset(Dataset):
     """
-    Dataset subclass for Identifying speaker.
+    발화자 식별을 위한 데이터셋 서브클래스
     """
     def __init__(self, data_list):
         super(ISDataset, self).__init__()
