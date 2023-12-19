@@ -11,6 +11,7 @@ import torch
 from torch.utils.data import Dataset, DataLoader
 from sklearn.model_selection import train_test_split
 
+# 사용자가 사전에 단어 추가가 가능한 형태소 분석기를 이용(추후에 name_list에 등재된 이름을 등록하여 인식 및 분리하기 위함)
 twitter = Twitter()
 
 
@@ -70,11 +71,17 @@ def max_len_cut(seg_sents, mention_pos, max_len):
         - max_len: 입력 가능한 최대 길이
 
     Returns:
-        - 자르고 남은 문장 리스트와 조정된 언급된 위치
+        - seg_sents : 자르고 남은 문장 리스트
+        - mention_pos : 조정된 언급된 위치
     """
+    
+    # 각 문장의 길이를 문자 단위로 계산한 리스트 생성
     sent_char_lens = [sum(len(word) for word in sent) for sent in seg_sents]
+
+    # 전체 문자의 길이 합
     sum_char_len = sum(sent_char_lens)
 
+    # 각 문장에서, cut을 실행할 문자의 위치(맨 마지막 문자)
     running_cut_idx = [len(sent) - 1 for sent in seg_sents]
 
     while sum_char_len > max_len:
@@ -91,8 +98,10 @@ def max_len_cut(seg_sents, mention_pos, max_len):
         sent_char_lens[max_len_sent_idx] -= reduced_char_len
         sum_char_len -= reduced_char_len
 
+        # 자를 위치 삭제
         del seg_sents[max_len_sent_idx][running_cut_idx[max_len_sent_idx]]
 
+        # 자를 위치 업데이트
         running_cut_idx[max_len_sent_idx] -= 1
 
     return seg_sents, mention_pos
