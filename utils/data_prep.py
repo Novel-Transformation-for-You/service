@@ -38,6 +38,10 @@ def NML(seg_sents, mention_positions, ws):
         발화 후보자 이름이 언급된 위치와 인용문 사이의 거리를 단어 수준(word level)에서 반환합니다.
 
         Parameters:
+            - pos: 발화 후보자가 언급된 위치 (sentence_index, word_index)
+            
+        Returns:
+            - 발화 후보자와 언급된 위치 사이의 거리 (단어 수준)
         """
         if pos[0] == ws:
             w_d = ws * 2
@@ -49,12 +53,25 @@ def NML(seg_sents, mention_positions, ws):
                 len(sent) for sent in seg_sents[ws + 1:pos[0]]) + len(seg_sents[pos[0]][:pos[1]])
         return w_d
 
+    # 언급된 위치들과 인용문 사이의 거리를 가까운 순으로 정렬
     sorted_positions = sorted(mention_positions, key=lambda x: word_dist(x))
 
+    # 가장 가까운 언급 위치(Nearest Mention Location) 반환
     return sorted_positions[0]
 
 
 def max_len_cut(seg_sents, mention_pos, max_len):
+    """
+    주어진 문장을 모델에 입력 가능한 최대 길이(max_len)로 자르는 함수
+
+    Parameters:
+        - seg_sents: 문장을 분할한 리스트
+        - mention_pos: 발화 후보자가 언급된 위치 (sentence_index, word_index)
+        - max_len: 입력 가능한 최대 길이
+
+    Returns:
+        - 자르고 남은 문장 리스트와 조정된 언급된 위치
+    """
     sent_char_lens = [sum(len(word) for word in sent) for sent in seg_sents]
     sum_char_len = sum(sent_char_lens)
 
