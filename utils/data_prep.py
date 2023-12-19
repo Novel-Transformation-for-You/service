@@ -160,14 +160,15 @@ def create_CSS(seg_sents, candidate_mention_poses, args):
     return:
         Returned contents are in lists, in which each element corresponds to a candidate.
         The order of candidate is consistent with that in list(candidate_mention_poses.keys()).
-        many_CSS: 각 발화자 후보에 대한 candidate-specific segments(CSS).
+        many_css: 각 발화자 후보에 대한 candidate-specific segments(CSS).
         many_sent_char_len: 각 CSS의 문자 길이 정보
             [[character-level length of sentence 1,...] of the CSS of candidate 1,...].
-        many_mention_pos: CSS 내에서, 인용문과 가장 가까운 이름이 언급된 위치
+        many_mention_pos: CSS 내에서, 인용문과 가장 가까운 이름이 언급된 위치 정보
             [(sentence-level index of nearest mention in CSS, 
              character-level index of the leftmost character of nearest mention in CSS, 
              character-level index of the rightmost character + 1) of candidate 1,...].
-        many_quote_idx: the sentence-level index of quote sentence in CSS.
+        many_quote_idx: CSS 내의 인용문의 문장 인덱스
+        many_cut_css : 최대 길이 제한이 적용된 CSS
 
     """
     ws = args.ws
@@ -234,17 +235,17 @@ class ISDataset(Dataset):
 
 def build_data_loader(data_file, alias2id, args, save_name=None) -> DataLoader:
     """
-    Build the dataloader for training.
+    학습을 위한 데이터로더를 생성합니다.
     """
-    # Add dictionary
+    # 사전에 이름을 추가
     for alias in alias2id:
         twitter.add_dictionary(alias, 'Noun')
 
-    # load instances from file
+    # 파일을 줄별로 불러들임
     with open(data_file, 'r', encoding='utf-8') as fin:
         data_lines = fin.readlines()
 
-    # pre-processing
+    # 전처리
     data_list = []
 
     for i, line in enumerate(tqdm(data_lines)):
@@ -261,18 +262,21 @@ def build_data_loader(data_file, alias2id, args, save_name=None) -> DataLoader:
         if offset == 22:
             speaker_name = line.strip().split()[-1]
 
-            # 빈 리스트는 제거합니다.
+            # 빈 리스트는 제거
             filtered_list = [li for li in raw_sents_in_list if li]
 
-            # segmentation and character mention location
+            # 문장 분할 및 등장인물 언급 위치 추출
             seg_sents, candidate_mention_poses, name_list_index = seg_and_mention_location(
                 filtered_list, alias2id)
 
+            # CSS 생성
             css, sent_char_lens, mention_poses, quote_idxes, cut_css = create_CSS(
                 seg_sents, candidate_mention_poses, args)
 
+            # 후보자 리스트
             candidates_list = list(candidate_mention_poses.keys())
 
+            # 원핫 레이블 생성
             one_hot_label = [0 if character_idx != alias2id[speaker_name]
                              else 1 for character_idx in candidate_mention_poses.keys()]
 
@@ -299,9 +303,10 @@ def build_data_loader(data_file, alias2id, args, save_name=None) -> DataLoader:
                               cut_css, one_hot_label, true_index, category, name_list_index,
                               name, scene, place, time, cut_position, candidates_list,
                               instance_index))
-
+    # 데이터로더 생성
     data_loader = DataLoader(ISDataset(data_list), batch_size=1, collate_fn=lambda x: x[0])
 
+    # 저장할 이름이 주어진 경우 데이터 리스트 저장
     if save_name is not None:
         torch.save(data_list, save_name)
 
@@ -312,18 +317,40 @@ def load_data_loader(saved_filename: str) -> DataLoader:
     """
     저장된 파일에서 데이터를 로드하고 DataLoader 객체로 변환합니다.
     """
+    # 저장된 데이터 리스트 로드
     data_list = load_data(saved_filename)
     return DataLoader(ISDataset(data_list), batch_size=1, collate_fn=lambda x: x[0])
 
 
 def split_train_val_test(data_file, alias2id, args, save_name=None, test_size=0.2, val_size=0.1, random_state=13):
-    # 기존의 데이터 로딩 및 전처리 부분
+    """
+    기존 검증 방식을 적용하여 데이터 로더를 빌드합니다.
+    주어진 데이터 파일을 훈련, 검증, 테스트 세트로 분할하고 각각의 DataLoader를 생성합니다.
+
+    Parameters:
+        - data_file: 분할할 데이터 파일 경로
+        - alias2id: 등장인물 이름과 ID를 매핑한 딕셔너리
+        - args: 실행 인자를 담은 객체
+        - save_name: 분할된 데이터를 저장할 파일 이름
+        - test_size: 테스트 세트의 비율 (기본값: 0.2)
+        - val_size: 검증 세트의 비율 (기본값: 0.1)
+        - random_state: 랜덤 시드 (기본값: 13)
+
+    Returns:
+        - train_loader: 훈련 데이터로더
+        - val_loader: 검증 데이터로더
+        - test_loader: 테스트 데이터로더
+    """
+
+    # 사전에 이름 추가
     for alias in alias2id:
         twitter.add_dictionary(alias, 'Noun')
 
+    # 파일에서 인스턴스 로드
     with open(data_file, 'r', encoding='utf-8') as fin:
         data_lines = fin.readlines()
 
+    # 전처리
     data_list = []
 
     for i, line in enumerate(tqdm(data_lines)):
@@ -343,15 +370,18 @@ def split_train_val_test(data_file, alias2id, args, save_name=None, test_size=0.
             # 빈 리스트는 제거합니다.
             filtered_list = [li for li in raw_sents_in_list if li]
 
-            # segmentation and character mention location
+            # 문장 분할 및 등장인물 언급 위치 추출
             seg_sents, candidate_mention_poses, name_list_index = seg_and_mention_location(
                 filtered_list, alias2id)
 
+            # CSS 생성
             css, sent_char_lens, mention_poses, quote_idxes, cut_css = create_CSS(
                 seg_sents, candidate_mention_poses, args)
 
+            # 후보자 리스트
             candidates_list = list(candidate_mention_poses.keys())
 
+            # 원핫 레이블 생성
             one_hot_label = [0 if character_idx != alias2id[speaker_name]
                              else 1 for character_idx in candidate_mention_poses.keys()]
 
