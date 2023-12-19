@@ -17,12 +17,6 @@ twitter = Twitter()
 def load_data(filename) -> Any:
     """
     지정된 파일에서 데이터를 로드합니다.
-
-    Parameters:
-        filename: 로드할 파일의 경로 및 이름
-
-    Returns:
-        Any: 로드된 데이터
     """
     return torch.load(filename)
 
@@ -30,26 +24,10 @@ def load_data(filename) -> Any:
 def NML(seg_sents, mention_positions, ws):
     """
     Nearest Mention Location
-    
-    params:
-        seg_sents: segmented sentences of an instance in a list.
-            [[word 1,...] of sentence 1,...].
-        mention_positions: the positions of mentions of a candidate.
-            [[sentence-level index, word-level index] of mention 1,...].
-        ws: single-sided context window size.
-
-    return:
-        The position of the mention which is the nearest to the quote.
     """
     def word_dist(pos):
         """
         The word level distance between quote and the mention position
-
-        param:
-            pos: [sentence-level index, word-level index] of the character mention.
-
-        return:
-            w_d: word-level distance between the mention and the quote.
         """
         if pos[0] == ws:
             w_d = ws * 2

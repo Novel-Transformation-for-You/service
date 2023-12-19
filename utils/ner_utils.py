@@ -180,8 +180,8 @@ def make_name_list(ner_inputs, checkpoint):
         tokenized_sent, pred_tags = get_ner_predictions(ner_input, checkpoint)
         names, scene = ner_inference(tokenized_sent, pred_tags, checkpoint)
         name_list.extend(names)
-        times.append(scene['시간'])
-        places.append(scene['장소'])
+        times.extend(scene['시간'])
+        places.extend(scene['장소'])
 
     return name_list, times, places
 
@@ -259,3 +259,28 @@ def combine_similar_names(names_dict):
         if len([name for name in group if len(name) > 1]) > 0}
 
     return updated_names
+
+def convert_name2codename(codename2name, text):
+    """RE를 이용하여 이름을 코드네임으로 변경합니다."""
+    # 우선 각 name을 길이 내림차순으로 정렬하고,
+    import re
+    for n_list in codename2name.values():
+        n_list.sort(key=lambda x:(len(x), x), reverse=True)
+
+    for codename, n_list in codename2name.items():
+        for subname in n_list:
+            text = re.sub(subname, codename, text)
+
+    return text
+
+
+def convert_codename2name(codename2name, text):
+    """코드네임을 이름으로 변경해줍니다."""
+    outputs = []
+    for i in text:
+        try:
+            outputs.append(codename2name[i][0])
+        except:
+            outputs.append('알 수 없음')
+
+    return outputs

@@ -1,19 +1,23 @@
-# %%
-
-from module.ner_utils import ner_inference
-
-
 #%%
 from utils.load_model import load_ner
 from utils.input_process import make_ner_input
 from utils.ner_utils import make_name_list, show_name_list, combine_similar_names
 import torch
 
-path ='model/NER.pth'
-checkpoint = torch.load(path)
-model = checkpoint['model']
-model.load_state_dict(checkpoint['model_state_dict'])
+from utils.train_model import KCSN
+from utils.arguments import get_train_args
 
+
+args = get_train_args()
+path ='model/model.ckpt'
+model = KCSN(args)
+checkpoint = torch.load(path)
+model.load_state_dict(checkpoint['model'])
+
+# model = checkpoint['model']
+
+
+# %%
 with open('test/test.txt', "r", encoding="utf-8") as f:
     file_content = f.read()
 

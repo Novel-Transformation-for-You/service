@@ -100,57 +100,11 @@ def find_speak(fs_model, input_data, tokenizer, alias2id):
     return names
 
 
-
-# """
-# 사용자로부터 입력받은 text를 전처리 하는 모듈
-# """
-# import torch
-# from transformers import AutoTokenizer
-
-# # from ..model.ner.ner_utils import show_tokens
-# from .input_process import make_instance_list, input_data_loader, making_script
-
-
-
-# def user_input(text):
-#     """
-    
-#     """
-#     ins_list, ins_num = make_instance_list(text)
-#     user_input = input_data_loader(ins_list, alias2id=alias2id)
-#     user_input_iter = iter(user_input)
-
-#     who = []
-#     for i, _ in enumerate(user_input):
-#         model_s.load_state_dict(model_state_dict)
-#         seg_sents, css, sent_char_lens, mention_poses, quote_idxes, cut_css, name_list_index = next(
-#             user_input_iter)
-#         features, tokens_list = convert_examples_to_features(examples=css, tokenizer=tokenizer_s)
-
-#         try:
-#             predictions = model_s(features, sent_char_lens, mention_poses, quote_idxes, 0, "cpu",
-#                                 tokens_list, cut_css)
-
-#             # scores, scores_false, scores_true = predictions
-#             scores, _, _ = predictions
-
-#             # 후처리
-#             scores_np = scores.detach().cpu().numpy()
-#             scores_list = scores_np.tolist()
-#             score_index = scores_list.index(max(scores_list))
-#             name_index = name_list_index[score_index]
-
-#             for key, val in alias2id.items():
-#                 if val == name_index:
-#                     result_key = key
-
-#             # print(result_key, ins_list[i][10])
-#             who.append(result_key)
-
-#         except RuntimeError:
-#             # print('UNK', ins_list[i][10])
-#             who.append('UNK')
-
-#     output = making_script(text, who, ins_num)
-
-#     return output
+def making_script(text, speaker:list, instance_num:list) -> str:
+    """
+    스크립트를 만드는 함수
+    """
+    lines = text.splitlines()
+    for num, people in zip(instance_num, speaker):
+        lines[num] = f'{people}: {lines[num]}'
+    return lines

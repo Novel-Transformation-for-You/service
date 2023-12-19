@@ -29,7 +29,7 @@ def make_instance_list(text: str, ws=10) -> list:
     lines = text.splitlines()
     max_line = len(lines)
 
-    utterance = ['"', '“']
+    utterance = ['"', '“', '‘']
     instance_num = []
 
     for idx, line in enumerate(lines):

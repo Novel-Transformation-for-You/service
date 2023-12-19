@@ -106,8 +106,10 @@ async def ner_file():
 async def kcsn_file(request_data: ItemListRequest):
     """사용자가 올려준 파일에 대해서 KCSN 모델 동작"""
     import torch
-    from utils.fs_utils import get_alias2id, find_speak
+    from utils.fs_utils import get_alias2id, find_speak, making_script
     from utils.input_process import make_instance_list, input_data_loader
+    from utils.train_model import KCSN
+    from utils.ner_utils import convert_name2codename, convert_codename2name
 
     content = app_data.file_content
     name_list = request_data.nameList
@@ -118,10 +120,22 @@ async def kcsn_file(request_data: ItemListRequest):
 
     content_re = convert_name2codename(name_dic, content)
 
-    checkpoint = torch.load('./model/final.pth')
-    model = checkpoint['model']
+    # checkpoint = torch.load('./model/final.pth')
+    # model = checkpoint['model']
+    # model.to('cpu')
+    # tokenizer = checkpoint['tokenizer']
+
+    from utils.arguments import get_train_args
+    from transformers import AutoTokenizer
+
+    args = get_train_args()
+    path ='model/model.ckpt'
+    model = KCSN(args)
     model.to('cpu')
-    tokenizer = checkpoint['tokenizer']
+
+    checkpoint = torch.load(path)
+    tokenizer = AutoTokenizer.from_pretrained(args.bert_pretrained_dir)
+    model.load_state_dict(checkpoint['model'])
 
     check_name = 'data/name.txt'
     alias2id = get_alias2id(check_name)
@@ -130,45 +144,6 @@ async def kcsn_file(request_data: ItemListRequest):
     output = find_speak(model, inputs, tokenizer, alias2id)
     outputs = convert_codename2name(name_dic, output)
     app_data.end_output = making_script(content, outputs, instance_num)
-
-    # # JSONResponse로 응답
-    # return JSONResponse(content={"itemList": output})
-
-
-def making_script(text, speaker:list, instance_num:list) -> str:
-    """
-    스크립트를 만드는 함수
-    """
-    lines = text.splitlines()
-    for num, people in zip(instance_num, speaker):
-        lines[num] = f'{people}: {lines[num]}'
-    return lines
-
-
-def convert_name2codename(codename2name, text):
-    """RE를 이용하여 이름을 코드네임으로 변경합니다."""
-    # 우선 각 name을 길이 내림차순으로 정렬하고,
-    import re
-    for n_list in codename2name.values():
-        n_list.sort(key=lambda x:(len(x), x), reverse=True)
-
-    for codename, n_list in codename2name.items():
-        for subname in n_list:
-            text = re.sub(subname, codename, text)
-
-    return text
-
-
-def convert_codename2name(codename2name, text):
-    """코드네임을 이름으로 변경해줍니다."""
-    outputs = []
-    for i in text:
-        try:
-            outputs.append(codename2name[i][0])
-        except:
-            outputs.append('알 수 없음')
-
-    return outputs
 
 
 if __name__ == "__main__":
