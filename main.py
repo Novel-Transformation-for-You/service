@@ -93,11 +93,14 @@ async def ner_file():
     _, ner_checkpoint = load_ner()
 
     contents = make_ner_input(content)
-    name_list, app_data.place, app_data.times = make_name_list(contents, ner_checkpoint)
+    name_list, times, places = make_name_list(contents, ner_checkpoint)
     name_dic = show_name_list(name_list)
     similar_name = combine_similar_names(name_dic)
     result_list = [', '.join(names) for names, _ in similar_name.items()]
+    app_data.place  = ' '.join(places)
+    app_data.times = ' '.join(times)
 
+    
     # JSONResponse로 응답
     return JSONResponse(content={"itemList": result_list})
 
