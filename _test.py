@@ -59,4 +59,18 @@ def make_script(texts, instance_num, output):
         if idx in instance_num
 
 
+#%%
+
+n = int(input())
+num = list(map(int, input().split()))
+ans = []
+
+for i, j in enumerate(num):
+    print(i, j)
+    if len(ans) == 0:
+        ans.append(i+1)
+    else:
+        ans.insert(len(ans)-j, i+1)
+
+print(ans)
 # %%

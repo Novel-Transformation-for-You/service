@@ -122,7 +122,7 @@ def get_ner_predictions(text, checkpoint):
 
 def ner_inference(tokenized_sent, pred_tags, checkpoint, name_len=5) -> list:
     """
-    NER을 실행하고, 이름과 시간 및 공간 정보를 추출합니다.
+    NER을 실행하고, 이름과 시간 및 공간 정보를 추출합니다.
     Args:
         tokenized_sent: 토큰화된 문장이 저장된 리스트
         pred_tags: 각 토큰에 대한 예측 태그값 (NER 결과)
@@ -130,14 +130,12 @@ def ner_inference(tokenized_sent, pred_tags, checkpoint, name_len=5) -> list:
         name_len: 더 정확한 이름 인식을 위해 앞뒤로 몇 개의 음절을 더 검토할지 지정합니다.
     Returns:
         namelist: 추출한 이름(별칭 포함) 리스트입니다. 후처리를 통해 
-        place: 추출한 장소 리스트입니다.
-        time: 추출한 시간 리스트입니다.
-    """
+        scene: 추출한 장소 시간 사전입니다.
+    """    
     name_list = []
     speaker = ''
     tokenizer = checkpoint['tokenizer']
-    place = []
-    time = []
+    scene = {'장소': [], '시간': []}
     target = ''
     c_tag = None
 
@@ -155,8 +153,6 @@ def ner_inference(tokenized_sent, pred_tags, checkpoint, name_len=5) -> list:
             else:
                 tmp = speaker
                 found_name = False
-
-                # 추출한 이름이 일반적인 이름 형식과 맞지 않을 경우 앞뒤 토큰을 재검토합니다.
                 # print(f'{speaker}에 의문이 생겨 확인해봅니다.')
                 for j in range(name_len):
                     if i + j < len(tokenized_sent['input_ids']):
@@ -178,15 +174,33 @@ def ner_inference(tokenized_sent, pred_tags, checkpoint, name_len=5) -> list:
         elif tag != 'O':
             if tag.startswith('B'):
                 if c_tag in ['TIM', 'DAT']:
-                    time.extend(target)
+                    scene['시간'].append(target)
                 elif c_tag =='LOC':
-                    place.extend(target)
+                    scene['장소'].append(target)
                 c_tag = tag[2:]
                 target = token
             else:
                 target += token.replace('_', ' ')
 
-    return name_list, place, time
+    return name_list, scene
+
+
+def make_name_list(ner_inputs, checkpoint):
+    """
+    문장들을 NER 돌려서 Name List 만들기.
+    """
+    name_list = []
+    times = []
+    places = []
+
+    for ner_input in ner_inputs:
+        tokenized_sent, pred_tags = get_ner_predictions(ner_input, checkpoint)
+        names, scene = ner_inference(tokenized_sent, pred_tags, checkpoint)
+        name_list.extend(names)
+        times.extend(scene['시간'])
+        places.extend(scene['장소'])
+
+    return name_list, times, places
 
 
 def show_name_list(name_list):
